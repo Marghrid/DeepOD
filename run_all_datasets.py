@@ -5,9 +5,9 @@ import json
 import multiprocessing
 import os
 import time
+from datetime import datetime
 
 import numpy as np
-import tqdm
 from sklearn.metrics import precision_score, recall_score
 from sklearn.model_selection import train_test_split
 
@@ -28,7 +28,7 @@ def run_model_for_dataset(task_idx, model, dataset_filename):
 
     start_time = time.time()
     clf = model(device='cpu')
-    with contextlib.redirect_stdout(None): #, contextlib.redirect_stderr(None):
+    with contextlib.redirect_stdout(None):  # , contextlib.redirect_stderr(None):
         try:
             res = clf.fit(X_train, y=y_train)
         except ValueError:
@@ -54,15 +54,17 @@ def run_model_for_dataset(task_idx, model, dataset_filename):
 
     precision = precision_score(y_test, y_predicted)
     recall = recall_score(y_test, y_predicted)
+    dataset_name = os.path.basename(dataset_filename)
+    model_name = "DeepOD " + clf.model_name
 
-    print("model:", clf.model_name, "; dataset:", os.path.basename(dataset_filename))
+    print("model:", model_name, "; dataset:", dataset_name)
     print("  - precision:", precision)
     print("  - recall:", recall)
 
-    result = {'dataset': os.path.basename(dataset_filename),
-              'num normals' : len(y_train[y_train == 0]),
+    result = {'dataset': dataset_name,
+              'num normals': len(y_train[y_train == 0]),
               'num anomalies': len(y_train[y_train == 1]),
-              'model': clf.model_name, 'precision': round(precision, 2),
+              'model': model_name, 'precision': round(precision, 2),
               'recall': round(recall, 2), 'fit time': round(fit_time, 2),
               'decision time': round(decision_time, 2),
               'predict time': round(predict_time, 2)
@@ -83,7 +85,7 @@ if __name__ == '__main__':
     unsupervised_models = [DeepSVDD, REPEN, RDP, RCA, GOAD, NeuTraL, ICL, DeepIsolationForest, SLAD]
     results = []
 
-    results_file = 'results.json'
+    results_file = 'results' + datetime.today().strftime('%Y%m%d') + '.json'
 
     with open(results_file, 'w') as f:
         pass
@@ -95,7 +97,11 @@ if __name__ == '__main__':
             tasks.append((i, model, dataset_filename))
             i += 1
 
-    with multiprocessing.Pool(processes=4) as pool:
+    print(f"Running {len(tasks)} tasks, "
+          f"{len(unsupervised_models)} models x "
+          f"{len(npz_datasets_filenames)} datasets. "
+          f"Saving results to {results_file}")
+    with multiprocessing.Pool(processes=1) as pool:
         results = pool.starmap(run_model_for_dataset, tasks)
 
     # for task in tasks:
