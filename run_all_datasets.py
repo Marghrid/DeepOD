@@ -77,7 +77,7 @@ def run_model_for_dataset(task_idx, model, dataset_filename):
 if __name__ == '__main__':
     npz_datasets_filenames = []
 
-    for file in glob.glob("/Users/mdealmei/DeepOD/ADBench/adbench/datasets/Classical/*.npz"):
+    for file in glob.glob("../ADBench/adbench/datasets/*/*.npz"):
         npz_datasets_filenames.append(file)
 
     # weakly_supervised_models = [DevNet, PReNet, DeepSAD, FeaWAD, RoSAS]
