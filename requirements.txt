@@ -9,3 +9,7 @@ pyarrow>=11.0.0
 einops
 statsmodels
 arch
+transformers
+datasets
+matplotlib
+torchvision
