@@ -23,8 +23,8 @@ def run_model_for_dataset(task_idx, model, dataset_filename):
     # This does not work, so maybe the weakly supervised models filter the data themselves?
     # select from X_train only the samples with y_train == 0
     # this is to simulate the weakly supervised setting
-    X_train = X_train[y_train == 0]
-    y_train = y_train[y_train == 0]
+    # X_train = X_train[y_train == 0]
+    # y_train = y_train[y_train == 0]
 
     start_time = time.time()
     clf = model(device='cpu')
@@ -78,6 +78,8 @@ if __name__ == '__main__':
     npz_datasets_filenames = []
 
     for file in glob.glob("../ADBench/adbench/datasets/*/*.npz"):
+        npz_datasets_filenames.append(file)
+    for file in glob.glob("../mini-cloudtrail/cloudtrail.npz"):
         npz_datasets_filenames.append(file)
 
     # weakly_supervised_models = [DevNet, PReNet, DeepSAD, FeaWAD, RoSAS]
