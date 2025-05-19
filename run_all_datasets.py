@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from deepod.models.tabular import DeepIsolationForest, DeepSVDD, GOAD, ICL, NeuTraL, RCA, RDP, REPEN, SLAD
 
 
-def run_model_for_dataset(task_idx, model, dataset_filename):
+def run_model_for_dataset(model, dataset_filename, task_idx=None):
     print("Task", task_idx, "started")
     data = np.load(dataset_filename)
     X, y = data['X'], data['y']
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     i = 0
     for dataset_filename in npz_datasets_filenames:
         for model in unsupervised_models:
-            tasks.append((i, model, dataset_filename))
+            tasks.append((model, dataset_filename, i))
             i += 1
 
     print(f"Running {len(tasks)} tasks, "
