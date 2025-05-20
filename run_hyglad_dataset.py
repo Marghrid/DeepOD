@@ -147,9 +147,15 @@ def get_text_and_label_arrays(events, anomaly_ids):
 
 if __name__ == '__main__':
 
-    train_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample.jsonl.gz"
-    test_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample_test.jsonl.gz"
-    anomaly_ids_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample_anomalies.csv"
+    # event sample:
+    # train_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample.jsonl.gz"
+    # test_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample_test.jsonl.gz"
+    # anomaly_ids_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample_anomalies.csv"
+
+    # BETH dataset. Needs to be run after build_beth_structured_logs.py
+    train_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/beth/beth_train.jsonl.gz"
+    test_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/beth/beth_test.jsonl.gz"
+    anomaly_ids_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/beth/beth_anomalies.csv"
 
     dataset_dir = os.path.dirname(train_set_hyglad_filepath)
     # dataset name is the prefix of the file name
