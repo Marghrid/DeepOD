@@ -27,7 +27,7 @@ def run_model_for_dataset(model, dataset_filename, task_idx=None):
     # y_train = y_train[y_train == 0]
 
     start_time = time.time()
-    clf = model(device='cpu')
+    clf = model(device = 'cuda' if torch.cuda.is_available() else 'cpu')
     with contextlib.redirect_stdout(None):  # , contextlib.redirect_stderr(None):
         try:
             res = clf.fit(X_train, y=y_train)
