@@ -86,7 +86,8 @@ def run_model_for_presplit_dataset(model, train_npz_file, test_npz_file, task_id
     # y_train = y_train[y_train == 0]
 
     start_time = time.time()
-    clf = model(device='cpu')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    clf = model(device=device)
     with contextlib.redirect_stdout(None):  # , contextlib.redirect_stderr(None):
         try:
             res = clf.fit(X_train, y=y_train)
@@ -210,9 +211,9 @@ if __name__ == '__main__':
     # anomaly_ids_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/event-sample/event_sample_anomalies.csv"
 
     # BETH dataset. Needs to be run after build_beth_structured_logs.py
-    train_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/beth/beth_train.jsonl.gz"
-    test_set_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/beth/beth_test.jsonl.gz"
-    anomaly_ids_hyglad_filepath = "/Users/mdealmei/datasets-for-anomaly-detection/beth/beth_anomalies.csv"
+    train_set_hyglad_filepath = "../beth/beth_train.jsonl.gz"
+    test_set_hyglad_filepath = "../beth/beth_test.jsonl.gz"
+    anomaly_ids_hyglad_filepath = "../beth/beth_anomalies.csv"
 
     dataset_dir = os.path.dirname(train_set_hyglad_filepath)
     # dataset name is the prefix of the file name
@@ -237,10 +238,20 @@ if __name__ == '__main__':
         print("Embedding test set...")
         embedding_NLP(text=test_text, label=test_labels, save_name=test_npz_file.replace('.npz', ''), plot=False)
 
-    unsupervised_models = [DeepSVDD, REPEN, RDP, RCA, GOAD, NeuTraL, ICL, DeepIsolationForest, SLAD]
+    unsupervised_models = [
+        DeepSVDD, # first one fails
+        #REPEN,
+        #RDP, # crashes
+        #RCA,
+        #GOAD,
+        #NeuTraL, # cuda crash
+        #ICL, # crash
+        #DeepIsolationForest,
+        #SLAD
+    ]
     # results = []
 
-    results_file = 'results' + datetime.today().strftime('%Y%m%d') + '.json'
+    results_file = 'results' + datetime.today().strftime('%Y%m%dT%H') + '.json'
 
     # create empty file
     with open(results_file, 'w') as f:
@@ -256,8 +267,8 @@ if __name__ == '__main__':
     print(f"Running {len(tasks)} tasks, "
           f"{len(unsupervised_models)} models. "
           f"Saving results to {results_file}")
-    with multiprocessing.Pool(processes=1) as pool:
-        results = pool.starmap(run_model_for_presplit_dataset, tasks)
+    for task in tasks:
+        results = run_model_for_presplit_dataset(*task)
 
     # for task in tasks:
     #     result = run_model_for_dataset(*task)
