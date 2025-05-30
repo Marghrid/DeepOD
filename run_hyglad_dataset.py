@@ -3,6 +3,7 @@ import gzip
 import json
 import multiprocessing
 import os
+import random
 import time
 from datetime import datetime
 
@@ -219,14 +220,59 @@ if __name__ == '__main__':
     # dataset name is the prefix of the file name
     dataset_name = os.path.basename(train_set_hyglad_filepath).replace("_train", "").split('.')[0]
 
-    train_npz_file = os.path.join(dataset_dir, dataset_name + '_train.npz')
-    test_npz_file = os.path.join(dataset_dir, dataset_name + '_test.npz')
+    train_npz_file = os.path.join(dataset_dir, 'deepod_' + dataset_name + '_train.npz')
+    test_npz_file = os.path.join(dataset_dir, 'deepod_' + dataset_name + '_test.npz')
 
     if not os.path.exists(train_npz_file) or not os.path.exists(test_npz_file):
         print("Data not encoded yet. Encoding data...")
         # load data
-        train_set, test_set, anomaly_ids = load_hyglad_data(train_set_hyglad_filepath, test_set_hyglad_filepath,
-                                                            anomaly_ids_hyglad_filepath)
+        normal_events, test_set, anomaly_ids = load_hyglad_data(train_set_hyglad_filepath, test_set_hyglad_filepath,
+                                                                anomaly_ids_hyglad_filepath)
+
+        print(
+            f"Loaded {len(normal_events)} normal events, {len(test_set)} test events, and {len(anomaly_ids)} anomaly IDs.")
+
+        print(f"Adding anomalies to training set.")
+        # For DeepOD's unsupervised and semi-supervised models to work, the training set needs to have some anomalies.
+        # For unsupervised models, we don't collect labels for the training set.
+        # We want to keep the training-test ratio, to ensure we do a fair comparison between DeepOD and HyGLAD.
+        # So we will swap a chunk the size of 20% of the test set
+
+        swap_chunk_size = int(0.2 * len(test_set))
+
+        # 1. Select chunk of the training set
+        training_set_sample = random.sample(normal_events, swap_chunk_size)
+
+        # 2. Remove the selected events from the training set
+        train_set = [e for e in normal_events if e not in training_set_sample]
+
+        # 3. Add the selected events to the test set
+        new_test_set = test_set + training_set_sample
+
+        # 4. Select chunk of the test set
+        test_set_sample = random.sample(new_test_set, swap_chunk_size)
+
+        # 5. Remove the selected events from the test set
+        test_set = [e for e in test_set if e not in test_set_sample]
+
+        # 6. Add the selected events to the training set
+        new_train_set = train_set + test_set_sample
+
+        # 7. Make sure the training set has some anomalies
+        train_ids = set(e['eventID'] for e in new_train_set)
+        anomaly_in_train = 0
+        for anomaly in anomaly_ids:
+            if anomaly in train_ids:
+                anomaly_in_train += 1
+        if anomaly_in_train == 0:
+            raise ValueError("If this happens for some dataset, the events from test set need to be resampled.")
+
+        print(
+            f"New split has {len(train_set)} training events ({100 * (anomaly_in_train / len(train_set))}% anomalies), {len(test_set)} test events.")
+
+        # save the new train and test sets
+        train_set = new_train_set
+        test_set = new_test_set
 
         # transform data to call embedding_NLP
         train_text, train_labels = get_text_and_label_arrays(train_set, anomaly_ids)
@@ -239,15 +285,15 @@ if __name__ == '__main__':
         embedding_NLP(text=test_text, label=test_labels, save_name=test_npz_file.replace('.npz', ''), plot=False)
 
     unsupervised_models = [
-        DeepSVDD, # first one fails
-        #REPEN,
-        #RDP, # crashes
-        #RCA,
-        #GOAD,
-        #NeuTraL, # cuda crash
-        #ICL, # crash
-        #DeepIsolationForest,
-        #SLAD
+        DeepSVDD,  # first one fails
+        # REPEN,
+        # RDP, # crashes
+        # RCA,
+        # GOAD,
+        # NeuTraL, # cuda crash
+        # ICL, # crash
+        # DeepIsolationForest,
+        # SLAD
     ]
     # results = []
 

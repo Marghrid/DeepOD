@@ -13,3 +13,4 @@ transformers
 datasets
 matplotlib
 torchvision
+jsonlines
